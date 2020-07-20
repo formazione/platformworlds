@@ -1,20 +1,14 @@
 import pygame, sys, os
 from random import choice
-
-
-clock = pygame.time.Clock()
-
 from pygame.locals import *
-pygame.init() # initiates pygame
 
+
+pygame.init()
+clock = pygame.time.Clock()
 pygame.display.set_caption('Pygame Platformer')
-
 WINDOW_SIZE = (600,800)
-
-screen = pygame.display.set_mode(WINDOW_SIZE,0,32) # initiate the window
-
+screen = pygame.display.set_mode(WINDOW_SIZE,0,32) 
 display = pygame.Surface((300, 400))
-# display2 = pygame.Surface((300, 400))
 
 moving_right = False
 moving_left = False
@@ -26,32 +20,28 @@ true_scroll = [0,0]
 def load_map():
     
     d = [
-        "110011",
-        "11010101"
-        "010111",
-        "011011",
-        "010111",
-        "110111",
-        "000111",
-        "111011",
-        "010000"
-        "110101",
-        "011001",
-        "000000",
-        "000000",
-        "000000",
-        "11111111111111111111111111"
-        "000000",
-        "110100"]
+        "1100",
+        "0101"
+        "0101",
+        "0110",
+        "0101",
+        "0001",
+        "1101",
+        "0001",
+        "1110",
+        "0100"
+        "1101",
+        "0110",
+        "0000",
+        "0000",
+        "0000",
+        "1101",
+        "0000",
+        "1101"]
+    data = [choice(d) + choice(d) + choice(d) for x in range(30)]
+    data.append("11111111111111111111")
+    return data
 
-
-    data = [choice(d)*2 for x in range(20)]
-
-
-    game_map = []
-    for row in data:
-        game_map.append(list(row))
-    return game_map
 
 global animation_frames
 animation_frames = {}
@@ -176,8 +166,9 @@ while True: # game loop
 
     #                 --------- BACKGROUND --------
 
-    display.blit(mount, (0, 30))
-    display.blit(sea, (0, 150))
+    display.blits(blit_sequence=(
+        (mount, (0, 0)),
+        (sea, (0, 120))))
     # for background_object in background_objects:
     #     obj_rect = pygame.Rect(
     #         background_object[1][0] - scroll[0] * background_object[0],
