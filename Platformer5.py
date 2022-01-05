@@ -18,42 +18,23 @@ air_timer = 0
 true_scroll = [0,0]
 
 
-def load_map():
-    "Map generated randomly"
-    # d = [
-    #     "1100",
-    #     "0101"
-    #     "0101",
-    #     "0110",
-    #     "0101",
-    #     "0001",
-    #     "1101",
-    #     "0001",
-    #     "1110",
-    #     "0100"
-    #     "1101",
-    #     "0110",
-    #     "0000",
-    #     "0000",
-    #     "0000",
-    #     "1101",
-    #     "0000",
-    #     "1101"]
-    # data = [choice(d)*10 for x in range(30)]
-
+def load_map() -> list:
+    ''' Map 30 rows x 300 columns generated randomly '''
+    # It's called by game_map
     data = [] # will contain the rows with 0 and 1 generate randomly
     line = "" # create a "101010101010" random string with 0 and 1 to append to data
+    data.append("1"*300)
     for row in range(30): # 30 rows of 0 and 1
+        line += "1"
         for col in range(300): # 30 1 and 0 for line
-            line += choice(["0", "1"])
+            line += choice(["0", "0", "0", "1"])
+        line += "1"
         data.append(line) # add the random line
         line = "" # empty the line for the next row
-
-    # data.append("11111111111111111111")
+    data.append("1"*300)
     return data
 
 
-game_map = load_map()
 def tilerects():
 
     def show(dsp, srf, x, y):
@@ -73,11 +54,9 @@ def tilerects():
     return tile_rects
 
 
-global animation_frames
-animation_frames = {}
 
 def load_animation(path,frame_durations):
-    global animation_frames
+
     animation_name = path.split('/')[-1]
     animation_frame_data = []
     n = 0
@@ -100,23 +79,6 @@ def change_action(action_var,frame,new_value):
     return action_var,frame
         
 
-animation_database = {}
-
-animation_database['run'] = load_animation('player_animations/run',[7,7])
-animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
-
-
-
-grass_img = pygame.image.load('grass.png')
-dirt_img = pygame.image.load('dirt.png')
-
-player_action = 'idle'
-player_frame = 0
-player_flip = False
-
-player_rect = pygame.Rect(100, 100, 5, 13)
-
-background_objects = [[0.25,[120,10,70,400]],[0.25,[280,30,40,400]],[0.5,[30,40,40,400]],[0.5,[130,90,100,400]],[0.5,[300,80,120,400]]]
 
 def collision_test(rect,tiles):
     hit_list = []
@@ -150,13 +112,31 @@ def move(rect,movement,tiles):
 
 
 
+game_map = load_map()
+# global animation_frames
+animation_frames = {}
+animation_database = {}
+animation_database['run'] = load_animation('player_animations/run',[7,7])
+animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
+grass_img = pygame.image.load('grass.png')
+dirt_img = pygame.image.load('dirt.png')
+player_action = 'idle'
+player_frame = 0
+player_flip = False
+player_rect = pygame.Rect(100, 100, 5, 13)
+background_objects = [
+    [0.25,[120,10,70,400]],
+    [0.25,[280,30,40,400]],
+    [0.5,[30,40,40,400]],
+    [0.5,[130,90,100,400]],
+    [0.5,[300,80,120,400]]]
 
 
 
-# player_cover = pygame.Surface((5, 13))
-# player_cover.fill((0, 0, 0))
-# tile_cover = pygame.Surface((32, 32))
-# tile_cover.fill((0, 0, 255))
+player_cover = pygame.Surface((5, 13))
+player_cover.fill((0, 0, 0))
+tile_cover = pygame.Surface((32, 32))
+tile_cover.fill((0, 0, 255))
 
 
 #
@@ -180,23 +160,25 @@ while True: # game loop
     # pygame.draw.rect(display, (7, 80, 75), pygame.Rect(0, 120, 300, 400))
 
 
-    #                 --------- BACKGROUND --------
+    #                 --------- BACKGROUND  OBJECTS --------
 
     display.blits(blit_sequence=(
         (mount, (0, 0)),
-        (sea, (0, 120))))
+        # (sea, (0, 120))
+        ))
     # for background_object in background_objects:
     #     obj_rect = pygame.Rect(
     #         background_object[1][0] - scroll[0] * background_object[0],
     #         background_object[1][1] - scroll[1] * background_object[0],
     #         background_object[1][2],
     #         background_object[1][3])
-        
+    #     # THIS IS GREEN
     #     if background_object[0] == 0.5:
-    #         pygame.draw.rect(display, (14, 222, 150), obj_rect)
-        
+    #         pygame.draw.rect(display, (14, 222, 250), obj_rect)
+    #         # display.blit(sea, obj_rect)
+    #     # THIS IS BLUE
     #     else:
-    #         pygame.draw.rect(display, (9, 91, 85), obj_rect)
+    #         pygame.draw.rect(display, (9, 91, 185), obj_rect)
 
     tile_rects = tilerects()
 
