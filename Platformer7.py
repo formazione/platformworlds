@@ -34,7 +34,7 @@ def show_fps():
     ''' shows the frame rate on the screen '''
     fps_text = str(int(clock.get_fps())) # get the clocl'fps
     # render a text surface
-    fps_text += f" {player_rect.x}"
+    fps_text += f" {player_rect.x} {len(tile_rect)}"
     fps_surface = fps_font.render(fps_text, 1, pygame.Color("white"))
     # blit the background surface
 
@@ -56,8 +56,10 @@ def tilerects():
         x = 0
         for tile in layer:
             
-            right = x*16 < player_rect.x + 480
-            down = y*16 < player_rect.y + 350
+
+            # Limit the tiles shown to the visible ones
+            right = x*16 < player_rect.x + 450
+            down = y*16 < player_rect.y + 320
             up = y*16 > player_rect.y - 250
             left = x* 16 > player_rect.x - 200# and y*16 > player_rect.y - 200
             # if player_rect.x - 300 < x*16 < player_rect.x + 300:
