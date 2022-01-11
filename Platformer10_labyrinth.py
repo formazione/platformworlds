@@ -85,6 +85,11 @@ def create_map() -> list:
     def player_space():
         data[10][10] = 0
         data[10][11] = 0
+
+    def coin_place(percorso):
+        for i in range(50):
+            x, y = choice(percorso)
+            data[x][y] = 2
     
     def brother_place(percorso):
         # data[y] = list(data[y])
@@ -97,6 +102,7 @@ def create_map() -> list:
     generate_map_filled()
     percorso = generate_path()
     player_space()
+    coin_place(percorso)
     brother_place(percorso[100:])
  
     return data
@@ -120,6 +126,10 @@ def tilerects() -> list:
             # if player_rect.x - 300 < x*16 < player_rect.x + 300:
             if (right and down):
                 if up and left:
+                    if tile == 2:
+                        display.blit(coin, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                        coin_rects.append(pygame.Rect(x * 16, y * 16, 16, 16))
+
                     if tile == 1: # diplay a tile (eventually shifted with scroll[0])
                         # show(display, dirt_img, x, y)
                         display.blit(dirt_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
@@ -128,7 +138,7 @@ def tilerects() -> list:
                         display.blit(brother, (x * 16 - scroll[0], y * 16 - scroll[1]))
                 x += 1 # counter for the index in the list of 0 and 1 (game_map)
         y += 1
-    return tile_rects
+    return tile_rects, coin_rects
 
 
 def tilerects2() -> list:
@@ -159,7 +169,7 @@ def change_action(action_var,frame,new_value):
         
 
 
-def collision_test(rect,tiles):
+def collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:
         if rect.colliderect(tile):
@@ -170,22 +180,31 @@ def move(rect,movement,tiles):
     collision_types = {'top':False,'bottom':False,'right':False,'left':False}
     rect.x += movement[0]
     hit_list = collision_test(rect,tiles)
-    for tile in hit_list:
-        if movement[0] > 0:
-            rect.right = tile.left
-            collision_types['right'] = True
-        elif movement[0] < 0:
+    for tile in hit_list: # if player touches a tile
+        # check the side touched
+        if movement[0] > 0: # if goes towards right
+            rect.right = tile.left # it stays in front of the tile    o| |
+            collision_types['right'] = True # it collides on the right
+        elif movement[0] < 0: # if goes left
             rect.left = tile.right
             collision_types['left'] = True
-    rect.y += movement[1]
+    rect.y += movement[1] # vertical movement, continues to fall
     hit_list = collision_test(rect,tiles)
     for tile in hit_list:
-        if movement[1] > 0:
-            rect.bottom = tile.top
+        if movement[1] > 0: # if goes down
+            rect.bottom = tile.top # stays on top oaf the tile
             collision_types['bottom'] = True
         elif movement[1] < 0:
             rect.top = tile.bottom
             collision_types['top'] = True
+    # coin_list = collision_test(rect,coin_rects)
+    for coin in coin_rects:
+        if coin.colliderect(player_rect):
+            print("coin")
+            coin.play()
+            y, x = coin.y//16, coin.x//16
+            game_map[y][x] = 0
+
     return rect, collision_types
 
 
@@ -195,6 +214,8 @@ pygame.init() # all starts here
 pygame.mixer.init()
 pygame.mixer.music.load("tension2.mp3")
 pygame.mixer.music.play()
+click = pygame.mixer.Sound("sounds/click.ogg")
+coin = pygame.mixer.Sound("sounds/coin.wav")
 clock = pygame.time.Clock() # for the frame rate (not to go too fast)
 pygame.display.set_caption('Pygame Platformer')
 WINDOW_SIZE = (750,750)
@@ -221,6 +242,7 @@ animation_database['run'] = load_animation('player_animations/run',[7,7])
 animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
 grass_img = pygame.image.load('grass.png').convert()
 dirt_img = pygame.image.load('dirt.png').convert()
+coin = pygame.image.load('coin.png').convert()
 brother = pygame.image.load('brother.png').convert()
 # brother.set_colorkey((255,255,255))
 player_action = 'idle'
@@ -287,7 +309,10 @@ while True: # game loop
     #     else:
     #         pygame.draw.rect(display, (9, 91, 185), obj_rect)
 
-    tile_rects = tilerects()
+    # list containing where the tile and coins are, to check collisions in move() method
+    coin_rects = []
+    tile_rects, coin_rects = tilerects()
+    # tile_rects = tilerects()
 
     player_movement = [0,0]
     if moving_right == True:
