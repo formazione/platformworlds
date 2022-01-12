@@ -176,7 +176,10 @@ def collision_test(rect, tiles):
             hit_list.append(tile)
     return hit_list
 
+timer = 0
 def move(rect,movement,tiles):
+    global timer
+
     collision_types = {'top':False,'bottom':False,'right':False,'left':False}
     rect.x += movement[0]
     hit_list = collision_test(rect,tiles)
@@ -194,9 +197,17 @@ def move(rect,movement,tiles):
         if movement[1] > 0: # if goes down
             rect.bottom = tile.top # stays on top oaf the tile
             collision_types['bottom'] = True
+            if timer == 1:
+                click.play()
+                timer += 1
         elif movement[1] < 0:
             rect.top = tile.bottom
             collision_types['top'] = True
+            if timer == 0:
+                click.play()
+                timer += 1
+    
+   
     # coin_list = collision_test(rect,coin_rects)
     for coin in coin_rects:
         if coin.colliderect(player_rect):
@@ -204,7 +215,6 @@ def move(rect,movement,tiles):
             coin_sound.play()
             y, x = coin.y//16, coin.x//16
             game_map[y][x] = 0
-
     return rect, collision_types
 
 
@@ -212,10 +222,13 @@ def move(rect,movement,tiles):
 
 pygame.init() # all starts here
 pygame.mixer.init()
+
+######################################################### SOUNDS ################ SOUNDS *******
 pygame.mixer.music.load("tension2.mp3")
 pygame.mixer.music.play()
 click = pygame.mixer.Sound("sounds/click.ogg")
 coin_sound = pygame.mixer.Sound("sounds/coin_2.wav")
+jump = pygame.mixer.Sound("sounds/jump.wav")
 clock = pygame.time.Clock() # for the frame rate (not to go too fast)
 pygame.display.set_caption('Pygame Platformer')
 WINDOW_SIZE = (750,750)
@@ -275,7 +288,14 @@ player_rect = pygame.Rect(160, 160, 5, 13)
 # mount = pygame.image.load("mountains.png")
 # sea = pygame.image.load("sea.png")
 fps_font = pygame.font.SysFont("Arial", 20) # a font for the fps
+
+def steps():
+    if timecnt % 16 == 0:
+        click.play()
+
+timecnt = 0
 while True: # game loop
+    timecnt += 1
     display.fill((0,0,0)) # clear screen by filling it with blue
     # screen.blit(pygame.transform.scale(display2, WINDOW_SIZE), (0,0))
     true_scroll[0] += (player_rect.x-true_scroll[0]-152)/20
@@ -327,9 +347,11 @@ while True: # game loop
     if player_movement[0] == 0:
         player_action,player_frame = change_action(player_action,player_frame,'idle')
     if player_movement[0] > 0:
+        steps()
         player_flip = False
         player_action,player_frame = change_action(player_action,player_frame,'run')
     if player_movement[0] < 0:
+        steps()
         player_flip = True
         player_action,player_frame = change_action(player_action,player_frame,'run')
 
@@ -373,6 +395,8 @@ while True: # game loop
             if event.key == K_LEFT:
                 moving_left = True
             if event.key == K_UP:
+                timer = 0
+                jump.play()
                 if air_timer < 6:
                     vertical_momentum = -5
         if event.type == KEYUP:
