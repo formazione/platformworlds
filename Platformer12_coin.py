@@ -33,7 +33,7 @@ def load_animation(path,frame_durations):
 fps_list = []
 def show_fps():
     ''' shows the frame rate on the screen '''
-    fps = str(int(clock.get_fps())) # get the clocl'fps
+    fps = f"Fps: {int(clock.get_fps())} WorldPlat" # get the clocl'fps
     # fps_text = str(int(fps))
     # fps_list.append(int(fps))
     # add position of player and number of tiles in memory
@@ -43,19 +43,27 @@ def show_fps():
     # blit the background surface
     # blit the text surface on the backgroud
     # display.blit(fps_surface, (0, 0))
-    display.blit(fps_media, (180, 0))
+    display.blit(fps_media, (0, 0))
 
 
 def create_map() -> list:
     ''' Map 30 rows x 300 columns generated randomly '''
-    # It's called by game_map and is used to blit the map in tilerects()
+    # It's called by game_map and is used to blit the map in map_blit()
 
     data = [] # will contain the rows with 0 and 1 generate randomly
     def generate_map_filled():
         data.append([1 for x in range(300)])
-        for row in range(30): # 30 rows of 0 and 1
+        for row in range(13): # 30 rows of 0 and 1
+            data.append([0 for x in range(300)])
+        for row in range(5): # 30 rows of 0 and 1
+            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,0,2]) for x in range(300)])
+        for row in range(5): # 30 rows of 0 and 1
+            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,1,2]) for x in range(300)])
+        for row in range(5): # 30 rows of 0 and 1
+            data.append([choice([0,0,0,0,0,0,1]) for x in range(300)])
+        for row in range(3): # 30 rows of 0 and 1
             # this sets how many empty spaces there will be
-            data.append([choice([0,1,1,1]) for x in range(300)])
+            data.append([choice([0,0,0,0,0,1]) for x in range(300)])
             # data.append([choice([1]) for x in range(300)])
             data[row][0] = 1
             for x in range(0, 300, 10):
@@ -64,8 +72,15 @@ def create_map() -> list:
                 data[row+1][x+2] = 0
 
 
+        data.append([choice([0,0,0,0,0,1]) for x in range(300)])
+        data.append([4 for x in range(300)])
 
-        data.append([1 for x in range(300)])
+
+        for d in range(28,33):
+            for x in range(20, 30):
+                data[d][x] = 1
+            for x in range(30, 50):
+                data[d][x] = 0
 
     def generate_path():
         percorso = [] # used to place the brothen on the path
@@ -110,7 +125,7 @@ def create_map() -> list:
     percorso = generate_path()
     player_space()
     coin_place(percorso)
-    brother_place(percorso[100:])
+    # brother_place(percorso[100:])
  
     return data
 
@@ -118,7 +133,12 @@ def create_map() -> list:
 
 ######################### tiles
 
-def tilerects() -> list:
+def map_blit() -> list:
+
+    def touchable(lst, x,y):
+        ''' add to the list of tangible object (tiles like dirt_img) '''
+        lst.append(pygame.Rect(x * 16, y * 16, 16, 16))
+
     ''' blits the tiles on the display surface '''
     tile_rects = [] # this will contain the tiles position
     y = 0
@@ -133,38 +153,46 @@ def tilerects() -> list:
             # if player_rect.x - 300 < x*16 < player_rect.x + 300:
             if (right and down):
                 if up and left:
+                    if tile == 5: # tree not tangible
+                        display.blit(grass_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                    if tile == 4: # grass tangible
+                        display.blit(grass_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                        touchable(tile_rects, x, y)
                     if tile == 2:
                         display.blit(coin, (x * 16 - scroll[0], y * 16 - scroll[1]))
-                        coin_rects.append(pygame.Rect(x * 16, y * 16, 16, 16))
+                        touchable(coin_rects, x, y)
 
                     if tile == 1: # diplay a tile (eventually shifted with scroll[0])
                         # show(display, dirt_img, x, y)
                         display.blit(dirt_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
-                        tile_rects.append(pygame.Rect(x * 16, y * 16, 16, 16))
+                        touchable(tile_rects, x, y)
                     if tile == 3:
                         display.blit(brother, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                    
                 x += 1 # counter for the index in the list of 0 and 1 (game_map)
         y += 1
     return tile_rects, coin_rects
 
 
-def tilerects2() -> list:
+# def map_blit2() -> list:
 
-    tile_rects = [] # this will contain the tiles position
-    y = 0
-    for layer in game_map: # iteration of 0 and 1... space or tile
-        x = 0
-        for tile in layer:
-            if tile == 1: # diplay a tile (eventually shifted with scroll[0])
-                display.blit(dirt_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
-                tile_rects.append(pygame.Rect(x * 16, y * 16, 16, 16))
-            if tile == 3:
-                display.blit(brother, (x * 16 - scroll[0], y * 16 - scroll[1]))
-                tile_rects.append(pygame.Rect(x * 16, y * 16,16,16))
-            x += 1 # counter for the index in the list of 0 and 1 (game_map)
-        y += 1
+#     tile_rects = [] # this will contain the tiles position
+#     y = 0
+#     for layer in game_map: # iteration of 0 and 1... space or tile
+#         x = 0
+#         for tile in layer:
+#             if tile == -1: # grass
+#                 display.blit(grass_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
+#             if tile == 1: # diplay a tile (eventually shifted with scroll[0])
+#                 display.blit(dirt_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
+#                 tile_rects.append(pygame.Rect(x * 16, y * 16, 16, 16))
+#             if tile == 3:
+#                 display.blit(brother, (x * 16 - scroll[0], y * 16 - scroll[1]))
+#                 tile_rects.append(pygame.Rect(x * 16, y * 16,16,16))
+#             x += 1 # counter for the index in the list of 0 and 1 (game_map)
+#         y += 1
  
-    return tile_rects
+#     return tile_rects
 
 
 
@@ -238,9 +266,9 @@ coin_sound = pygame.mixer.Sound("sounds/coin_2.wav")
 jump = pygame.mixer.Sound("sounds/jump.wav")
 clock = pygame.time.Clock() # for the frame rate (not to go too fast)
 pygame.display.set_caption('Pygame Platformer')
-WINDOW_SIZE = (750,750)
+WINDOW_SIZE = (900,600)
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)  # Main surface
-display = pygame.Surface((250, 250)) # temporary surface to scale on screen
+display = pygame.Surface((300, 200)) # temporary surface to scale on screen
 moving_right = False # where is moving
 moving_left = False
 vertical_momentum = 0 # for the jump
@@ -260,10 +288,12 @@ animation_database = {} # database with a key for each action (run and idle)
 animation_database['run'] = load_animation('player_animations/run',[7,7])
 # the duration of each frame is different here
 animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
-grass_img = pygame.image.load('grass.png').convert()
-dirt_img = pygame.image.load('dirt.png').convert()
-coin = pygame.image.load('coin.png').convert()
-brother = pygame.image.load('brother.png').convert()
+
+dirt_img = pygame.image.load('dirt.png').convert() # 1
+coin = pygame.image.load('coin.png').convert() # 2
+brother = pygame.image.load('brother.png').convert() # 3
+grass_img = pygame.image.load('grass.png').convert() # 4
+tree_img = pygame.image.load('tree.png').convert() # 5
 # brother.set_colorkey((255,255,255))
 player_action = 'idle'
 player_frame = 0
@@ -338,8 +368,8 @@ while True: # game loop
 
     # list containing where the tile and coins are, to check collisions in move() method
     coin_rects = []
-    tile_rects, coin_rects = tilerects()
-    # tile_rects = tilerects()
+    tile_rects, coin_rects = map_blit()
+    # tile_rects = map_blit()
 
     player_movement = [0,0]
     if moving_right == True:
