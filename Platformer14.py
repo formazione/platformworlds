@@ -58,12 +58,12 @@ def create_map() -> list:
         for row in range(5): # 30 rows of 0 and 1
             data.append([choice([0,0,0,0,0,0,0,0,0,0,0,0,2]) for x in range(300)])
         for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,1,2]) for x in range(300)])
+            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,6,2]) for x in range(300)])
         for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,1]) for x in range(300)])
+            data.append([choice([0,0,0,0,0,0,6]) for x in range(300)])
         for row in range(3): # 30 rows of 0 and 1
             # this sets how many empty spaces there will be
-            data.append([choice([0,0,0,0,0,1]) for x in range(300)])
+            data.append([choice([0,0,0,0,0,6]) for x in range(300)])
             # data.append([choice([1]) for x in range(300)])
             data[row][0] = 1
             for x in range(0, 300, 10):
@@ -158,7 +158,10 @@ def map_blit() -> list:
             if (right and down):
                 if up and left:
                     # ========================== HERE THE TILES ARE SHOWN =========== #
-
+                    if tile == 6: # tree not tangible
+                        display.blit(plat6, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                        # this is touchable the half the height
+                        tile_rects.append(pygame.Rect(x * 16, y * 16, 16, 8))
                     if tile == 5: # tree not tangible
                         display.blit(tree_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
                     if tile == 4: # grass tangible
@@ -295,11 +298,15 @@ animation_database['run'] = load_animation('player_animations/run',[7,7])
 # the duration of each frame is different here
 animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
 
+
+# =========             T I L E S    images       ==========
+
 dirt_img = pygame.image.load('dirt.png').convert() # 1
 coin = pygame.image.load('coin.png').convert() # 2
 brother = pygame.image.load('brother.png').convert() # 3
 grass_img = pygame.image.load('grass.png').convert() # 4
 tree_img = pygame.image.load('tree.png').convert() # 5
+plat6 = pygame.image.load('plat6.png').convert() # 5
 # brother.set_colorkey((255,255,255))
 player_action = 'idle'
 player_frame = 0
