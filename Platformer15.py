@@ -33,7 +33,7 @@ def load_animation(path,frame_durations):
 fps_list = []
 def show_fps():
     ''' shows the frame rate on the screen '''
-    fps = f"Fps: {int(clock.get_fps())} WorldPlat" # get the clocl'fps
+    fps = f"Fps: {int(clock.get_fps())} {player_rect.x=}" # get the clocl'fps
     # fps_text = str(int(fps))
     # fps_list.append(int(fps))
     # add position of player and number of tiles in memory
@@ -60,7 +60,7 @@ def create_map() -> list:
         for row in range(5): # 30 rows of 0 and 1
             data.append([choice([0,0,0,0,0,0,0,0,0,0,0,6,2]) for x in range(300)])
         for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,6]) for x in range(300)])
+            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,6]) for x in range(300)])
         for row in range(3): # 30 rows of 0 and 1
             # this sets how many empty spaces there will be
             data.append([choice([0,0,0,0,0,6]) for x in range(300)])
@@ -234,11 +234,13 @@ def move(rect,movement,tiles):
     for tile in hit_list: # if player touches a tile
         # check the side touched
         if movement[0] > 0: # if goes towards right
-            rect.right = tile.left # it stays in front of the tile    o| |
-            collision_types['right'] = True # it collides on the right
+            if tile != 6:
+                rect.right = tile.left # it stays in front of the tile    o| |
+                collision_types['right'] = True # it collides on the right
         elif movement[0] < 0: # if goes left
-            rect.left = tile.right
-            collision_types['left'] = True
+            if tile != 6:
+                rect.left = tile.right
+                collision_types['left'] = True
     rect.y += movement[1] # vertical movement, continues to fall
     hit_list = collision_test(rect,tiles)
     for tile in hit_list:
@@ -248,12 +250,12 @@ def move(rect,movement,tiles):
             if timer == 1:
                 click.play()
                 timer += 1
-        elif movement[1] < 0:
-            rect.top = tile.bottom
-            collision_types['top'] = True
-            if timer == 0:
-                click.play()
-                timer += 1
+        # elif movement[1] < 0:
+        #     rect.top = tile.bottom
+        #     collision_types['top'] = False
+        #     if timer == 0:
+        #         click.play()
+        #         timer += 1
     
    
     # coin_list = collision_test(rect,coin_rects)
@@ -451,6 +453,7 @@ while True: # game loop
             if event.key == K_RIGHT:
                 moving_right = True
             if event.key == K_LEFT:
+
                 moving_left = True
             if event.key == K_UP:
                 timer = 0

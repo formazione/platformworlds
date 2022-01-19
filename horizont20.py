@@ -33,7 +33,7 @@ def load_animation(path,frame_durations):
 fps_list = []
 def show_fps():
     ''' shows the frame rate on the screen '''
-    fps = f"Fps: {int(clock.get_fps())} WorldPlat" # get the clocl'fps
+    fps = f"Fps: {int(clock.get_fps())} {player_rect.x=} {air_timer=}" # get the clocl'fps
     # fps_text = str(int(fps))
     # fps_list.append(int(fps))
     # add position of player and number of tiles in memory
@@ -52,38 +52,10 @@ def create_map() -> list:
 
     data = [] # will contain the rows with 0 and 1 generate randomly
     def generate_map_filled():
-        data.append([1 for x in range(300)])
-        for row in range(13): # 30 rows of 0 and 1
-            data.append([0 for x in range(300)])
-        for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,0,2]) for x in range(300)])
-        for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,6,2]) for x in range(300)])
-        for row in range(5): # 30 rows of 0 and 1
-            data.append([choice([0,0,0,0,0,0,6]) for x in range(300)])
-        for row in range(3): # 30 rows of 0 and 1
-            # this sets how many empty spaces there will be
-            data.append([choice([0,0,0,0,0,6]) for x in range(300)])
-            # data.append([choice([1]) for x in range(300)])
-            data[row][0] = 1
-            for x in range(0, 300, 10):
-                data[row+1][x] = 0
-                data[row+1][x+1] = 0
-                data[row+1][x+2] = 0
-
-
-        # data.append([choice([0,0,0,0,0,5]) for x in range(300)])
-        # the trees and rocks on the first floor
+        for row in range(10): # 30 rows of 0 and 1
+            data.append([choice([0,0,0,0,0,0,0,0,0,0,0,6,7]) for x in range(300)])
         data.append([choice([0,0,0,0,0,1, 5]) for x in range(300)])
-        # the basic floor
         data.append([4 for x in range(300)])
-
-
-        for d in range(28,33):
-            for x in range(20, 30):
-                data[d][x] = 1
-            for x in range(30, 50):
-                data[d][x] = 0
 
     def generate_path():
         percorso = [] # used to place the brothen on the path
@@ -99,7 +71,7 @@ def create_map() -> list:
             if digr == 1: # goes right
                 col += 1
             if digr == 2 and mem != 0: # goes down
-                if row < 29:
+                if row < 4:
                     row += 1
             mem = digr
 
@@ -135,13 +107,13 @@ def create_map() -> list:
 
 
 ######################### tiles
-
+coin_oscillator = 0
 def map_blit() -> list:
     ''' shows the tiles and make them touchable or not '''
 
     def touchable(lst, x,y):
         ''' add to the list of tangible object (tiles like dirt_img) '''
-        lst.append(pygame.Rect(x * 16, y * 16, 16, 16))
+        lst.append([tile, pygame.Rect(x * 16, y * 16, 16, 16)])
     def touchable_coins(lst, x,y):
         lst.append(pygame.Rect(x * 16, y * 16, 16, 16))
         display.blit(coin_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
@@ -161,17 +133,20 @@ def map_blit() -> list:
             if (right and down):
                 if up and left:
                     # ========================== HERE THE TILES ARE SHOWN =========== #
+                    if tile == 7: # tree not tangible
+                        display.blit(plat7, (x * 16 - scroll[0], y * 16 - scroll[1]))
+                        tile_rects.append([tile, pygame.Rect(x * 16, y * 16, 16, 1)])
                     if tile == 6: # tree not tangible
                         display.blit(plat6, (x * 16 - scroll[0], y * 16 - scroll[1]))
                         # this is touchable the half the height
-                        tile_rects.append(pygame.Rect(x * 16, y * 16, 16, 8))
+                        tile_rects.append([tile, pygame.Rect(x * 16, y * 16, 16, 1)])
                     if tile == 5: # tree not tangible
                         display.blit(tree_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
                     if tile == 4: # grass tangible
                         display.blit(grass_img, (x * 16 - scroll[0], y * 16 - scroll[1]))
                         touchable(tile_rects, x, y)
                     if tile == 2:
-                        touchable_coins(coin_rects, x, y)
+                        touchable_coins(coin_rects, x + coin_oscillator, y)
 
                     if tile == 1: # diplay a tile (eventually shifted with scroll[0])
                         # show(display, dirt_img, x, y)
@@ -220,8 +195,8 @@ def change_action(action_var,frame,new_value):
 def collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:
-        if rect.colliderect(tile):
-            hit_list.append(tile)
+        if rect.colliderect(tile[1]):
+            hit_list.append([tile, tile[1]])
     return hit_list
 
 timer = 0
@@ -229,31 +204,38 @@ def move(rect,movement,tiles):
     global timer
 
     collision_types = {'top':False,'bottom':False,'right':False,'left':False}
-    rect.x += movement[0]
-    hit_list = collision_test(rect,tiles)
-    for tile in hit_list: # if player touches a tile
-        # check the side touched
-        if movement[0] > 0: # if goes towards right
-            rect.right = tile.left # it stays in front of the tile    o| |
-            collision_types['right'] = True # it collides on the right
-        elif movement[0] < 0: # if goes left
-            rect.left = tile.right
-            collision_types['left'] = True
     rect.y += movement[1] # vertical movement, continues to fall
     hit_list = collision_test(rect,tiles)
     for tile in hit_list:
         if movement[1] > 0: # if goes down
-            rect.bottom = tile.top # stays on top oaf the tile
+            rect.bottom = tile[1].top # stays on top oaf the tile
             collision_types['bottom'] = True
-            if timer == 1:
-                click.play()
-                timer += 1
-        elif movement[1] < 0:
-            rect.top = tile.bottom
-            collision_types['top'] = True
-            if timer == 0:
-                click.play()
-                timer += 1
+    rect.x += movement[0]
+    # hit_list = collision_test(rect,tiles)
+    # for tile in hit_list: # iterate the rectangle of the tile
+    #     # check the side touched
+    #     if movement[0] > 0: # if goes towards right
+    #         if movement[1] < 0:
+    #             if tile[0] != 6 or tile[0] != 7:
+    #                 rect.right = tile[1].left # it stays in front of the tile    o| |
+    #                 collision_types['right'] = True # it collides on the right
+    #                 if timer == 1:
+    #                     click.play()
+    #                     timer += 1
+    #     elif movement[0] < 0: # if goes left
+    #         if movement[1] > 0:
+    #             if tile[0] != 6 or tile[0] != 7:
+    #                 rect.left = tile[1].right
+    #                 collision_types['left'] = True
+    #             if timer == 1:
+    #                 click.play()
+    #                 timer += 1
+        # elif movement[1] < 0:
+        #     rect.top = tile[1].bottom
+        #     collision_types['top'] = False
+        #     if timer == 0:
+        #         click.play()
+        #         timer += 1
     
    
     # coin_list = collision_test(rect,coin_rects)
@@ -315,6 +297,7 @@ brother = pygame.image.load('brother.png').convert() # 3
 grass_img = pygame.image.load('grass.png').convert() # 4
 tree_img = pygame.image.load('tree.png').convert() # 5
 plat6 = pygame.image.load('plat6.png').convert() # 5
+plat7 = pygame.image.load('plat7.png').convert() # 5
 # brother.set_colorkey((255,255,255))
 player_action = 'idle'
 player_frame = 0
@@ -356,8 +339,8 @@ while True: # game loop
     timecnt += 1
     display.fill((0,0,0)) # clear screen by filling it with blue
     # screen.blit(pygame.transform.scale(display2, WINDOW_SIZE), (0,0))
-    true_scroll[0] += (player_rect.x-true_scroll[0]-152)/20
-    true_scroll[1] += (player_rect.y-true_scroll[1]-106)/20
+    true_scroll[0] += (player_rect.x-true_scroll[0]-152)//20
+    true_scroll[1] += (player_rect.y-true_scroll[1]-106)//20
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
@@ -449,20 +432,20 @@ while True: # game loop
                 player_rect.y = 160
                 game_map = create_map()
             if event.key == K_RIGHT:
-                moving_right = True
+                    moving_right = True
             if event.key == K_LEFT:
-                moving_left = True
+                    moving_left = True
             if event.key == K_UP:
                 timer = 0
                 jump.play()
-                if air_timer < 6:
-                    vertical_momentum = -5
+                if air_timer < 20: # Air times goes from 0 to 5 when is standing
+                                  # so when it is on the ground can jump
+                    vertical_momentum = -3
         if event.type == KEYUP:
             if event.key == K_RIGHT:
                 moving_right = False
             if event.key == K_LEFT:
                 moving_left = False
-        
     show_fps()
     screen.blit(pygame.transform.scale(display, WINDOW_SIZE), (0,0))
     pygame.display.update()
