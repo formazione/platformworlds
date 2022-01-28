@@ -28,7 +28,7 @@ def load_animation(path: str, frame_durations: list):
 fps_list = []
 def show_fps():
     ''' shows the frame rate on the screen '''
-    fps = f"Fps: {int(clock.get_fps())} {score=} {air_timer}" # get the clocl'fps
+    fps = f"Fps: {int(clock.get_fps())} {score=} {coin_num=}" # get the clocl'fps
     fps_media = fps_font.render(fps, 1, pygame.Color("white"))
     display.blit(fps_media, (0, 0))
 
@@ -76,6 +76,7 @@ def create_map() -> list:
         for i in range(50):
             x, y = choice(percorso)
             data[x][y] = 2
+
     
     def brother_place(percorso):
         # data[y] = list(data[y])
@@ -172,7 +173,7 @@ def collision_test(rect, tiles):
 
 timer = 0
 def move(rect,movement,tiles):
-    global timer, score
+    global timer, score, coin_num
 
     collision_types = {'top':False,'bottom':False,'right':False,'left':False}
     rect.y += movement[1] # vertical movement, continues to fall
@@ -192,43 +193,59 @@ def move(rect,movement,tiles):
             # delete the coin from the game_map list of tiles [[0,0...]...]
             y, x = coin.y//16, coin.x//16
             game_map[y][x] = 0
+            coin_num -= 1
     return rect, collision_types
 
 
 pygame.init() # all starts here
 pygame.mixer.init()
+
+#        SOUNDS
 pygame.mixer.music.load("sounds/music.wav")
 pygame.mixer.music.play()
 click = pygame.mixer.Sound("sounds/click.ogg")
 coin_sound = pygame.mixer.Sound("sounds/coin_2.wav")
 jump = pygame.mixer.Sound("sounds/jump.wav")
+
+# SCREEN AND CLOCK
 clock = pygame.time.Clock() # for the frame rate (not to go too fast)
 pygame.display.set_caption('Pygame Platformer')
 WINDOW_SIZE = (900,600)
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)  # Main surface
 display = pygame.Surface((300, 200)) # temporary surface to scale on screen
+
+
+# MOVEMENT CHECK
 moving_right = False # where is moving
 moving_left = False
 vertical_momentum = 0 # for the jump
 air_timer = 0 # how long the jump is ?
-
 true_scroll = [0,0] # the camera control
+
+# MAP CREATION
 game_map = create_map() # 0 and 1... and other numbers for tile
+coin_num = 0
+for row in game_map:
+    for i in row:
+        if i == 2:
+            coin_num += 1
+print(f"{coin_num=}")
+
+# GRAPHIC CONTROL
 animation_frames = {} # key = frame name, value = run_0, run_0, ... run_1...
 animation_database = {} # database with a key for each action (run and idle)
-
 animation_database['run'] = load_animation('player_animations/run',[7,7])
 # the duration of each frame is different here
 animation_database['idle'] = load_animation('player_animations/idle',[7,7,40])
+# LOADING IMAGES AND CONVERTING
+dirt_img = pygame.image.load('dirt.png').convert() # 1
 
-score = 0
-coins = []
+# coin image loading is in a class
 class Coin:
     def __init__(self):
         self.image = pygame.image.load('coin.png').convert() # 2
-
-dirt_img = pygame.image.load('dirt.png').convert() # 1
 coin_img = Coin().image # 2
+
 brother = pygame.image.load('brother.png').convert() # 3
 grass_img = pygame.image.load('grass.png').convert() # 4
 tree_img = pygame.image.load('tree.png').convert() # 5
@@ -238,15 +255,26 @@ player_action = 'idle'
 player_frame = 0
 player_flip = False
 
+# SCORE and COIN MANAGER
+score = 0
+coins = []
+
+
+# POSITION OF PLAYER FOR COLLISION
 player_rect = pygame.Rect(160, 160, 5, 13)
 
+# FONT OBJECT
 fps_font = pygame.font.SysFont("Arial", 20) # a font for the fps
 
 def steps():
-    if timecnt % 16 == 0:
+    ''' Make noise when walk'''
+    if timecnt % 16 == 0 and air_timer < 6: # do not step when jump 28.1.2022
         click.play()
+
 global collision_types
 timecnt = 0
+
+
 while True: # game loop
     timecnt += 1
     display.fill((0,0,0)) # clear screen by filling it with blue
@@ -284,8 +312,7 @@ while True: # game loop
     player_rect, collisions = move(player_rect,player_movement,tile_rects)
 
     if collisions['bottom'] == True:
-        if air_timer > 60:
-            player_rect = pygame.Rect(100,100,5,13)
+
         air_timer = 0
         vertical_momentum = 0
     else:
@@ -319,10 +346,11 @@ while True: # game loop
             if event.key == K_LEFT:
                     moving_left = True
             if event.key == K_UP:
+                
                 timer = 0
-                jump.play()
                 if air_timer < 20: # Air times goes from 0 to 5 when is standing
                                   # so when it is on the ground can jump
+                    jump.play()
                     vertical_momentum = -3
 
             if event.key == K_DOWN:
